@@ -1,0 +1,77 @@
+#!/bin/bash
+pc=$(whoami)
+SFTP_SERVER="3pl-test.pegatroncorp.com"
+SFTP_USER="jinny"
+SFTP_PWD="pega#1234"
+home=$(whoami)
+
+
+cp -r /CTS_tool/for_pythonUI/CTSUI.sh /home/$home 
+chmod 755 /home/$home/CTSUI.sh
+cp -r /CTS_tool/for_pythonUI/CTSUI.sh /home/$home/Desktop
+chmod 755 /home/$home/Desktop/CTSUI.sh
+
+function Sync_CTSUI()
+{
+	echo "1"| sudo -S sudo apt-get install python-tk
+	lftp sftp://$SFTP_USER:$SFTP_PWD@$SFTP_SERVER -e 'mirror -n  /disk3/3pl/CTS_tool/for_pythonUI /CTS_tool/for_pythonUI ; bye'
+	echo "1"| sudo apt-get install python3-bs4
+	sudo chmod 755 /CTS_tool/for_pythonUI/*
+
+	python '/CTS_tool/for_pythonUI/CTS1.py'
+}
+
+function MediaLocal()
+{
+	cd /CTS_tool/Media
+	search_GtsMediatxt=$(ls | grep -m1 GtsMedia-dynamic-config-1.0.txt )
+	GtsMedia=GtsMedia-dynamic-config-1.0.txt
+
+	if [ "$search_GtsMediatxt" == "$GtsMedia" ] ;then
+	echo "GtsMedia.txt existing"
+	else
+
+	cd /CTS_tool/Media
+	echo " " > GtsMedia-dynamic-config-1.0.txt
+	echo "Cerate GtsMedia.txt"
+	fi
+
+	search_CtsMediatxt=$(ls | grep -m1 CtsMedia.txt )
+	CtsMedia=CtsMedia.txt
+	if [ "$search_CtsMediatxt" == "$CtsMedia" ] ;then
+	echo "CtsMedia.txt existing"
+	else
+
+	cd /CTS_tool/Media
+	echo "/CTS_tool/Media/android-cts-media-1.5" > CtsMedia.txt
+	echo "Cerate CtsMedia.txt"
+	fi
+
+
+
+
+	cd ~
+	CheckBashrcGts=$(grep -q  "export GtsMedia" .bashrc && echo "0" || echo "1")
+	if [ $CheckBashrcGts == "1" ];then
+	echo 'GtsMedia=$(head /CTS_tool/Media/GtsMedia-dynamic-config-1.0.txt)' >>~/.bashrc
+	echo "export GtsMedia" >> ~/.bashrc
+		else
+		echo "bashrc existing"
+
+	fi
+	
+	CheckBashrcCts=$(grep -q  "export CtsMedia" .bashrc && echo "0" || echo "1")
+	if [ $CheckBashrcCts == "1" ];then
+	echo 'CtsMedia=$(head /CTS_tool/Media/CtsMedia.txt)' >>~/.bashrc
+	echo "export CtsMedia" >> ~/.bashrc
+		else
+		echo "bashrc existing"
+
+	fi
+
+
+}
+
+#MediaLocal
+#echo "############################################"
+Sync_CTSUI
